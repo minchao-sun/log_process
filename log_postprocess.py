@@ -21,11 +21,8 @@ from optparse import OptionParser
 import re
 import pexpect
 
-global vmlinux_f
-global sysdump_p
 global ylog_p
 global serial_num
-global devbitinfo
 num64 = "sp9850"
 num642 = "sp9860"
 num643 = "sp9832"
@@ -1911,7 +1908,6 @@ class runTime(object):
         dp.close()
         if ret == False:
             return False
-        # d = [datetime.datetime.now().year, string.atoi(line[0:2]), string.atoi(line[3:5]), string.atoi(line[6:8]),string.atoi(line[9:11]), string.atoi(line[12:14])]
         d = [datetime.datetime.now().year, string.atoi(line[1:3]), string.atoi(line[4:6]), string.atoi(line[7:9]),
              string.atoi(line[10:12]), string.atoi(line[13:15])]
         start_time = datetime.datetime(d[0], d[1], d[2], d[3], d[4], d[5])
@@ -1950,6 +1946,9 @@ class runTime(object):
             while line:
                 if keyword_regex.search(line):
                     while line:
+                        if len(line) < 2:
+                            line = fd.readline()
+                            continue
                         if line[1] >= '0' and line[1] <= '9':
                             break
                         line = fd.readline()
@@ -1982,19 +1981,6 @@ def sd_last_kernel_get_time(line):
 
 
 def sd_last_kernel_start_end_time(filep2):
-    '''
-    fd = open(filep1)
-    line = fd.readline()
-    while line:
-        ret = sd_last_kernel_get_time(line)
-        if ret:
-            start_time = ret
-            break
-        line = fd.readline()
-    fd.close()
-    if not ret:
-        return ret
-    '''
     fd = open(filep2)
     line = fd.readline()
     while line:
@@ -2005,8 +1991,6 @@ def sd_last_kernel_start_end_time(filep2):
     if ret:
         end_time = ret
         print end_time
-        # time_lenth = end_time - start_time
-        # return time_lenth
         return end_time
     return ret
 
@@ -2065,27 +2049,13 @@ def run_time(log_p, folderparser):
                 sd_monkey_flag = True
                 sd_monkey = f
                 continue
-    '''
-    data_last_path = log_p + os.path.sep + "internal_storage" + os.path.sep + "last_ylog"
-    if os.path.exists(data_last_path):
-        for p,d,f in os.walk(data_last_path):
-            for filename in f:
-                if filename.find("cmdline") != -1:
-                    sd_cmdline_flag = True
-                    sd_cmdline = filename
-                    sd_cmdline = os.path.join(p,filename)
-                    print sd_cmdline
-                    break
-    '''
+
     if not sd_kernel_file_exist_flag:
         preport.write("no sd last kernel log\n")
 
     if not sd_monkey_flag:
         preport.write("no sd monkey log\n")
-    '''
-    if not sd_cmdline_flag:
-        preport.write("no sd cmdline log\n")
-    '''
+
 
     sd_last_kernel.sort()
     print sd_last_kernel
@@ -2123,13 +2093,6 @@ def run_time(log_p, folderparser):
         runtime = get_start_end_time_msr(filep)
 
         preport.write("This result from \"MSR.log\" \n")
-        # runtime = (end_time.split(" ")[-1] - start_time.split(" ")[-1])
-        # start_time = "start time: %s\n"%start_time
-        # end_time = "end time: %s\n"%end_time
-        # preport.write(start_time)
-        # preport.write(end_time)
-        # print runtime.seconds
-        # formate_str = "How long test time1: [%s]\n"%runtime
         formate_str = "\nMSR Run Time: [%s]\n" % runtime
         preport.write(formate_str)
     elif sd_kernel_file_exist_flag:
@@ -2158,40 +2121,10 @@ def run_time(log_p, folderparser):
                 preport.write("\nRun Time: %s" % runtime)
                 result_flag = True
                 break
-        '''
-        if result_flag == False:
-            preport.write("did'not find key word in the proplem.list\n")
-            rtf = runtime(sd_last_kernel[0])
-            et = rtf.find_test_end_time(none)
-            end_time = et
-            file_name = "end time from file:%s\n"%sd_last_kernel[0]
-            preport.write(file_name)
-            et = "end time %s\n"%et
-            preport.write(et)
-            runtime = (end_time - start_time)
-            result_flag = true
-        '''
-        # if result_flag == False and sd_cmdline_flag == True:
         if result_flag == False and os.path.exists(lowpower_path):
-            '''	
-            charger_flag = False
-            fd = open(sd_cmdline)
-            line = fd.readline()
-            while line:
-                if line.find("androidboot.mode=charger") != -1:
-                    charger_flag = True
-                    break
-                line = fd.readline()
-            if not charger_flag :
-                preport.write("no find mode = charge!\n")
-                fd.close()
-            '''
             if sd_kernel_file_exist_flag == True:
-                # ret = sd_last_kernel_start_end_time(sd_last_kernel[-1], sd_last_kernel[0])
                 ret = sd_last_kernel_start_end_time(sd_last_kernel[0])
                 if ret:
-                    # start_time_file = "start time from file:%s\n"%sd_last_kernel[-1]
-                    # preport.write(start_time_file)
                     end_time = ret
                     end_time_file = "end time from file:%s\n" % sd_last_kernel[0]
                     preport.write(end_time_file)
@@ -2201,8 +2134,6 @@ def run_time(log_p, folderparser):
                     result_flag = True
                     st = "\nRun Time: %s\n" % time_lenth
                     preport.write(st)
-                    # runtime = ret
-                    # print runtime
 
         if result_flag == False:
             preport.write("did'not find key word in the proplem.list\n")
@@ -2221,8 +2152,7 @@ def run_time(log_p, folderparser):
             fd = open(sd_monkey)
             line = fd.readline()
             while line:
-                if Monkey_Start_Calendar_Time.search(line):  # line.find('Monkey Start Calendar Time'):
-                    # d = [datetime.datetime.now().year,string.atoi(line[65:67]),string.atoi(line[68:70]), string.atoi(line[71:73]), string.atoi(line[74:76]), string.atoi(line[77:79])]
+                if Monkey_Start_Calendar_Time.search(line):
                     ttime = line.split(" ")[-3:-1]
                     print "ttt"
                     print ttime
@@ -2234,44 +2164,32 @@ def run_time(log_p, folderparser):
                     print start_time
                     break
                 line = fd.readline()
-            count_time = 0
             while line:
                 while line:
-                    if calendar_time_regex.search(line):  # line.find("calendar_time"):
+                    if calendar_time_regex.search(line):
                         ttime = line.split("calendar_time:")[-1].split(" ")
-                        # print ttime[0]
-                        # print ttime[1]
                         d = [string.atoi(ttime[0][0:4]), string.atoi(ttime[0][5:7]), string.atoi(ttime[0][8:10]),
                              string.atoi(ttime[1][0:2]), string.atoi(ttime[1][3:5]), string.atoi(ttime[1][6:8]), ]
                         first_time = datetime.datetime(d[0], d[1], d[2], d[3], d[4], d[5])
                         break
                     line = fd.readline()
-                # print first_time - start_time
-                # print (first_time - start_time).days
                 if (first_time - start_time).days > 4:
-                    # print first_time
                     if rtime == 0:
                         rtime = end_time - start_time
                     else:
                         rtime += end_time - start_time
                     start_time = first_time
-                    # print rtime
                     continue
                 line = fd.readline()
                 while line:
-                    if calendar_time_regex.search(line):  # line.find("calendar_time"):
+                    if calendar_time_regex.search(line):
                         ttime = line.split("calendar_time:")[-1].split(" ")
-                        # print ttime[0]
-                        # print ttime[1]
                         d = [string.atoi(ttime[0][0:4]), string.atoi(ttime[0][5:7]), string.atoi(ttime[0][8:10]),
                              string.atoi(ttime[1][0:2]), string.atoi(ttime[1][3:5]), string.atoi(ttime[1][6:8]), ]
                         end_time = datetime.datetime(d[0], d[1], d[2], d[3], d[4], d[5])
                         break
                     line = fd.readline()
-                # print end_time - start_time
-                # print (end_time - start_time).days
                 if (end_time - start_time).days > 4:
-                    # print end_time
                     if rtime == 0:
                         rtime = first_time - start_time
                     else:
@@ -2286,9 +2204,7 @@ def run_time(log_p, folderparser):
                 runtime = end_time - start_time + rtime
             else:
                 runtime = end_time - start_time
-            result_flag = True
             print runtime
-            # formate_str = "How long test time3: [%d]\n"%runtime.seconds
             formate_str = "\nMonkey Run Time: %s\n" % runtime
             preport.write(formate_str)
 
@@ -2297,6 +2213,8 @@ def run_time(log_p, folderparser):
 ###############parse_kernel,anr,java.native,wt###################
 
 def run_kernel_panic(devbit):
+    global vmlinux_f
+    global sysdump_p
     print "***********kernel_panic begin************"
 
     m = Main(vmlinux_f, sysdump_p, ylog_p, devbit, serial_num)
@@ -3809,6 +3727,7 @@ def read_kmemleak_to_list(destFile):
 
 
 def parse_kmemleak(input_dir, devnum):
+    global vmlinux_f
     if platform.system() == "Linux":
         location = input_dir.rfind("/")
     else:
@@ -4002,6 +3921,7 @@ def parse_anr(input_dir, devnum):
 ################################################################################################
 
 def sysdump_check(sysdump_info):
+    global sysdump_p
     flag = False
     for file in os.listdir(sysdump_p):
         if file.find("sysdump.core.00") != -1:
@@ -4461,6 +4381,7 @@ class AnalyzeYlog(object):
 
 ############################################################################################
 def download_vmlinux():
+    global vmlinux_f
     v_path = None
     v_path = get_build_host()
     if v_path.endswith("/"):
@@ -4496,6 +4417,7 @@ def download_vmlinux():
 
 
 if __name__ == '__main__':
+    global sysdump_p
 
     if len(sys.argv) > 1:
         ylog_base_p = sys.argv[1]
@@ -4607,7 +4529,8 @@ if __name__ == '__main__':
 
     generate_list(ylog_base_p)
     folderp = FolderParser(ylog_p, serial_num)
-    try:
-        run_time(ylog_p, folderp)
-    except:
-        print "Failed to get run time."
+    run_time(ylog_p, folderp)
+    # try:
+    #     run_time(ylog_p, folderp)
+    # except:
+    #     print "Failed to get run time."
