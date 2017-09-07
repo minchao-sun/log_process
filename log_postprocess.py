@@ -32,20 +32,10 @@ savepath = None
 
 
 def isLinux():
-    sysstr = platform.system()
-    if (sysstr == "Windows"):
-        return False
-    elif (sysstr == "Linux"):
-        return True
-    else:
-        return False
+    return platform.system() == "Linux"
 
 
 class FolderParser(object):
-    '''
-    classdocs
-    '''
-
     def __init__(self, logfolder, devnum):
         '''
         Constructor
@@ -75,33 +65,10 @@ class FolderParser(object):
         self.mapfadereal[self.dateinternal_lastlog] = []
         self.mapfadereal[self.dateexternal] = ""
         self.mapfadereal[self.dateexternal_lastlog] = []
-        pass
 
     def workpath(self):
         for parent, dirnames, filenames in os.walk(self.logfolder):
             for dirname in dirnames:
-                # print "parent is:" + parent
-                # check if endwith external_storage
-                # check if endwith external_storage
-                # print  "dirname is" + dirname
-                # internal_storage
-                # internal_storage/last_log
-                # internal_storage/2014-06-03-19-27-04
-                '''
-                if dirname.find("-") != -1 and parent.find("last_log") != -1 and parent.find("internal_log") != -1:
-                    if isLinux():
-                        interlast_external_date = parent.split("/")[-2]
-                    else:
-                    interlast_external_date = parent.split("\\")[-2]
-                    self.mapfadereal[self.dateinternal_lastlog].append((interlast_external_date,dirname))
-                elif dirname.find("-") != -1 and parent.find("last_log") != -1:
-                    self.mapfadereal[self.dateexternal_lastlog].append(dirname)
-                if  dirname.find("-") != -1 and parent.endswith("external_storage"):
-                    self.mapfadereal[self.dateexternal] = dirname
-                if  dirname.find("-") != -1 and parent.endswith("internal_storage"):
-                    self.mapfadereal[self.dateinternal] = dirname
-                        self.fullfolderpaths.append(os.path.join(parent, dirname))
-                '''
                 if dirname.find("ylog") != -1 and parent.endswith("last_ylog") and parent.find(
                         "external_storage") != -1:
                     print "last_ext"
@@ -125,59 +92,31 @@ class FolderParser(object):
                     self.mapfadereal[self.dateinternal_lastlog] = dirname
                 self.fullfolderpaths.append(os.path.join(parent, dirname))
 
-            # self.printData()
             for filename in filenames:
-                # print "parent is"+ parent
-                # print "filename is:" + filename
-                # print "the full name of the file is:" + os.path.join(parent,filename)
                 self.fullfilepaths.append(os.path.join(parent, filename))
-                # print "*****************self.mapfadereal*************"
-                # print self.mapfadereal
 
-    # return the string list of files with "," split
     def getFilesBy(self, typeName):
+        """
+        :param typeName:
+        :return: return the string list of files with "," split
+        """
         files = self.cp.getProblemFiles(typeName)
         print typeName
         for f in files:
             f.toStr()
-        # print f
         print typeName
         tmprefiles = []
-        # count_num = 0
-        # print files
-        # get all path meeted files
         for i in self.fullfilepaths:
-            #    count_num += 1
-            #   print "--------------print count_num----------------"
-            #    print str(count_num)
-            #    print "------------print i----------------"
-            #    print i
             for f in files:
-                # print "xx"+f.getPath()
-                # print "yy"+self.getRealPath(f.getPath())
-                # print "0000000000f in files0000000000"
-                # print f
                 pp = ""
                 if not isLinux():
                     pp = f.getPath().replace("/", "\\")
                 else:
                     pp = f.getPath().replace("\\", "/")
-                    # print "tototoototototototot"
-                    # f.toStr()
-                    # print "--------------print pp----------------"
-                    # print pp
-                    # print self.getRealPath(pp)
-                    # print i
                 pp_list = self.getRealPath(pp)
-                # print "plplplplplplplplplplplplplp"
-                # for pl in pp_list:
-                #    print pl
-                # for ppl in pp_list:
                 for jn in range(len(pp_list)):
                     if i.find(pp_list[jn]) >= 0:
-                        # check items
                         chk = f.getCheckitem()
-                        # print "chk" + str(chk)
                         if chk == "" or chk == None:
                             tmprefiles.append(i)
                         else:
@@ -185,11 +124,9 @@ class FolderParser(object):
                                 if os.path.basename(i).find(ii) >= 0:
                                     tmprefiles.append(i)
                                     break
-                                    # break
         print "tmprefile " + str(tmprefiles)
         tmprefiles = list(set(tmprefiles))
         return ",".join(tmprefiles)
-        pass
 
     def __checkComplete(self, f):
         i = 0
@@ -203,20 +140,14 @@ class FolderParser(object):
         if result == "" or result == None:
             return ""
         results = []
-        # print "---------self.mapfadereal.item------"
-        # print self.mapfadereal.items
         for (k, v) in self.mapfadereal.items():
             if result.find(k) != -1:
 
-                # print "************print k v**************88"
-                # print k,v
                 if v == "" or v == []:
                     results.append(result.replace(k, "nofolderfound"))
                 else:
                     if isinstance(v, list):
                         for i in range(len(v)):
-                            # print "list"
-                            # print v[i]
                             vv = v[i]
                             if isinstance(vv, tuple):
                                 results.append(result.replace(k, vv[1]).replace("DATEEXTERNAL_LASTLOG", vv[0]))
@@ -224,33 +155,27 @@ class FolderParser(object):
                                 results.append(result.replace(k, vv))
                     else:
                         results.append(result.replace(k, v))
-
-            # print result
             else:
                 results.append(result)
         results = list(set(results))
 
         return self.__checkComplete(results)
-        pass
 
 
 class ConfigParser:
     def __init__(self, configfile):
         self.configfile = configfile
         self.root = et.parse(configfile).getroot()
-        pass
 
     # get checkItems
     def getCheckItems(self):
         checkfileNode = self.root.find("checkfile")
         files = checkfileNode.findall("file")
         fArr = []
-        # stype="file",ismust=0,checkitem="",condition="",path=""
         for f in files:
-            # print f.get("type"),f.get("ismust"),f.get("checkitem"),f.get("condition"),f.text
             ff = FileItem(f.get("type"), f.get("ismust"), f.get("checkitem"), f.get("condition"), f.text)
             fArr.append(ff)
-            pass
+
         return fArr
 
     def getProblemFiles(self, problemtype):
@@ -267,9 +192,7 @@ class ConfigParser:
                 ff = FileItem(x.get("type"), "", x.get("checkitem"), "", x.text)
                 ff.toStr()
                 files.append(ff)
-            pass
         return files
-        pass
 
     def getProblems(self):
         problemneedfilenode = self.root.find("problemneededfile")
@@ -292,7 +215,6 @@ class FileItem(object):
         self.path = path
         self.checktype = checktype
         self.checkresult = ""
-        pass
 
     def getCheckitem(self):
         return self.checkitem
@@ -305,14 +227,12 @@ class FileItem(object):
 
 
 def printstr(str):
-    # if debug:
     if True:
         print str
 
 
 class Main:
     def __init__(self, vmlinuxPath, sysdumpPath=None, slogPath=None, devbitInfo=None, devNum=None):
-        # def __init__(self, sysdumpPath=None, slogPath=None, devNum=None):
         self.vmlinuxPath = vmlinuxPath
         self.sysdumpPath = sysdumpPath
         self.slogPath = slogPath
@@ -344,7 +264,6 @@ class Main:
         if not os.path.isdir(self.savePath_dir):
             os.makedirs(self.savePath_dir)
         print "savepath " + str(self.savePath)
-        pass
 
     def initData(self):
         # check folder
@@ -360,18 +279,10 @@ class Main:
             if str(fz).find(key) >= 0:
                 return self.sysdumpPath + os.path.sep + str(fz)
         return None
-        pass
 
     def run(self):
-        # printstr("begin run")
-        # self.report_content += self.getSlogCheckReport() + "\n"
-        # self.report_content += self.getAndroidKernelLogkReport() + "\n"
         self.report_content += str(self.getAndroidRebootMode()) + "\n"
-        # self.report_content += self.getCheckSysdumpReport() + "\n"
-        # self.report_content += self.getLastRegAccess() + "\n"
         self.report_content += self.getSysdumpKernelLog() + "\n"
-        # self.report_content += self.getTextSegmentCompareResult() + "\n"
-        pass
 
     def getSysdumpKernelLog(self):
         global bit_t
@@ -395,23 +306,15 @@ class Main:
             f = open(res[1])
             result += f.read()
             f.close()
-            pass
+
         else:
             result += "No Oops log"
 
         return result
         if sysdumpfile.find("dumpall") != -1:
             os.remove(sysdumpfile)
-        pass
 
     def getAndroidRebootMode(self):
-        # get cmdline.log path
-        '''
-        import os
-        path=last_log_path+"*/misc/cmdline.log"
-        result = os.popen("ls " + path).read()
-        print result
-        '''
         fp = FolderParser(self.slogPath, self.devnum)
         files_cmdline = fp.getFilesBy("sysinfo")
         ss_cmd = files_cmdline.split(",")
@@ -420,26 +323,18 @@ class Main:
                 fp = open(f.strip())
                 content = fp.read()
                 fp.close()
-                # print "aa"
-                # print str(content).strip()
-                # print "bb"
-                # get the cmdline.log field androidboot.mode
                 # TODO wait for geng.ren androidboot.mode
                 rebootmodeindex = str(content).find("androidboot.mode")
                 if rebootmodeindex == -1:
                     return self.startmode_report_tag + "\n" + "no androidboot.mode"
-                    # return "norebootmode"
                 else:
                     subresult = str(content)[rebootmodeindex:len(content)]
                     subresult = subresult.split(" ")[0]
                     subresult = subresult.split("=")[1]
                     return self.startmode_report_tag + "\n" + subresult
-                    # return subresult
             else:
                 print "file  " + f + " is not exist"
                 return self.startmode_report_tag + "\n" + "no cmdline.log file"
-        pass
-
         '''
             get all content from kernel log contains log keys
         '''
@@ -451,7 +346,6 @@ class Main:
         f.write(self.report_content)
         f.close()
         print "report store in  file " + self.savePath
-        pass
 
 
 class KernelLogParser:
@@ -463,7 +357,6 @@ class KernelLogParser:
         self.savelocation = savelocation
         if not os.path.isdir(self.savelocation):
             os.makedirs(self.savelocation)
-        pass
         if (self.devbit.find("9850") != -1 or self.devbit.find("9860") != -1) and self.devbit.find("9850ka") < 0:
             self.tool = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
                 os.path.dirname(os.path.dirname(self.vmpath)))))) + os.path.sep + "tools" + os.path.sep + "crash64"
@@ -494,17 +387,10 @@ class KernelLogParser:
             child.expect("crash64_2>")
         else:
             child.expect("crash32>")
-        # crash = child.expect('erin')
-        # child.expect(cmdline)
         print "crashhhhhhhhhhhhhhhhhhhhhh"
-        # print crash
-        # fout = open (self.savelocation + "kernel_log.log", "w")
         kernel_log = self.savelocation + "kernel_log.log"
-        #########time.sleep(30)
-        # cmd1 = "log >%s" %kernel_log
         cmd1 = "log > %s" % kernel_log
         print cmd1
-        # child.sendline("log > kernel_log.txt")
         child.sendline(cmd1)
         child.sendline("q")
         time.sleep(2)
@@ -560,7 +446,6 @@ def get_product(devf):
         return product
     except:
         pass
-
         # product:sprdroid5.1_trunk_SharkLT8
 
 
@@ -583,7 +468,6 @@ def get_base_version(fingf):
                 break
             line = fd.readline()
     if b_version:
-        # print b_version
         return b_version
         # sp9838aea_oversea/scx35l64_sp9838aea_5mod:5.1/LMY47D-W15.24.2-01:userdebug/test-key
 
@@ -605,14 +489,11 @@ def get_hw_version(dev_file):
                 break
             line = fd.readline()
     if hw_version:
-        # print hw_version
         return hw_version
-        # pass
         # [ro.product.hardware]: [SP9838A-1_V1.0.0(5M)]
 
 
 def get_version_pac(devicef, fingerf):
-    # b_host = get_build_host(devicef)
     b_host = ""
     b_host = get_build_host()
     b_host = b_host + "artifact/PAC/"
@@ -623,7 +504,6 @@ def get_version_pac(devicef, fingerf):
     ss = ss[location + 1:]
     ss = ss.split('/')[0]
     pac = b_host + d_mode + "_" + ss + "-native"
-    # print pac
     return pac
 
 
@@ -689,7 +569,6 @@ def walkpath(log_path):
             if file_list.find("kernel_log.log") != -1:
                 problem_file.append(os.path.join(p, file_list))
                 kernel_panic = True
-            # break
             if file_list.find("watchdog_list.txt") != -1:
                 problem_file.append(os.path.join(p, file_list))
             if file_list.find("java_crash_list.txt") != -1:
@@ -705,9 +584,7 @@ def walkpath(log_path):
         for dir_list in d:
             dirlist = None
             dirlist = os.listdir(os.path.join(p, dir_list))
-            if dirlist:
-                pass
-            else:
+            if not dirlist:
                 shutil.rmtree(os.path.join(p, dir_list))
     return problem_file
 
@@ -746,7 +623,6 @@ def generate_final_report(finalf, plist, repol):
                 if len(plist) > 0:
                     flag = get_probleminfo(line, plist)
                     if flag != 0:
-                        # plist.remove(flag)
                         del plist[flag[0]]
                         finalf.write("\n")
                         if isinstance(flag[0], tuple):
@@ -761,7 +637,6 @@ def generate_final_report(finalf, plist, repol):
                             if line.find("file: ") != -1 or line.find("--------------") != -1:
                                 next_flag = True
                                 break
-                            # if line.find("am_crash") != -1 or line.find("pid:") != -1 or line.find("Subject:") != -1:
                             if javacrash_regex.search(line) or nativecrash_regex.search(line) or watchdog1_regex.search(
                                     line) or watchdog2_regex.search(line):
                                 next_p = True
@@ -795,7 +670,6 @@ def generate_final_report2(finalf, plist, repol):
     pl = open(repol)
     line = pl.readline()
     while line:
-        # next_flag = False
         length = False
         if line.find("file: ") != -1:
             linefile = line
@@ -866,10 +740,6 @@ def convert(sec):
 def kernel_panic_abstr(kernel_t, fp_out):
     kernel_panic_regex = re.compile(r'PC is at')
     kernel_bug_regex = re.compile(r'BUG:\s+failure at')
-    kernel_panic_IO_regex = re.compile(r'last reg access result')
-    kernel_panic_IO_end_regex = re.compile(r'cpu count')
-    kernel_panic_compare_regex = re.compile(r'text statement compare result')
-    kernel_panic_reg_regex = re.compile(r'reg index:')
     kernel_warning_regex = re.compile(r'WARNING:')
     kernel_panic_Panic_regex = re.compile(r'Kernel Panic')
     kernel_panic_panic_regex = re.compile(r'Kernel panic')
@@ -885,8 +755,6 @@ def kernel_panic_abstr(kernel_t, fp_out):
     kernel_crash_module = None
     while line:
         if kernel_panic_regex.search(line) or kernel_bug_regex.search(line):
-            # if kernel_panic_regex.search(line):
-            line_ori = line
             kernel_crash_module = line.split(' ')[-1].strip()
             pattern = r"(\[.*?\])"
             line = re.findall(pattern, line, re.M)
@@ -898,8 +766,6 @@ def kernel_panic_abstr(kernel_t, fp_out):
         line = fp.readline()
     fp_out.write("Kernel crash module: %s\n" % kernel_crash_module)
     fp_out.write("kernel crash time: %s\n" % kernel_crash_time)
-    # fp_out.write("***********************kernel_panic_log*******************\n")
-    # fp_out.write("Kernel crash log:\n")
     fp.seek(0)
     line = fp.readline()
     f_flag = False
@@ -907,7 +773,6 @@ def kernel_panic_abstr(kernel_t, fp_out):
     while line:
         if line.find(" cut here ") != -1:
             cut_line = line
-            # fp_out.write(line)
             line = fp.readline()
             while line:
                 if kernel_warning_regex.search(line):
@@ -916,12 +781,10 @@ def kernel_panic_abstr(kernel_t, fp_out):
                     wp.write(cut_line)
                     i = 0
                     while line and i < 30:
-                        # fp_out.write(line)
                         wp.write(line)
                         i += 1
                         line = fp.readline()
                         if line.find(" end trace ") != -1:
-                            # fp_out.write(line)
                             wp.write(line)
                             wp.write("\n")
                             break
@@ -951,8 +814,8 @@ def kernel_panic_abstr(kernel_t, fp_out):
         line = fp.readline()
         while line:
             if kernel_panic_Panic_regex.search(line) or kernel_panic_panic_regex.search(
-                    line) or kernel_panic_oops_regex.search(line) or kernel_panic_bug_regex.search(line) or line.find(
-                "Unable to handle kernel") != -1 or line.find("Modules linked in") != -1:
+                    line) or kernel_panic_oops_regex.search(line) or kernel_panic_bug_regex.search(
+                line) or line.find("Unable to handle kernel") != -1 or line.find("Modules linked in") != -1:
                 print line
                 f_flag = True
                 i = 0
@@ -969,12 +832,10 @@ def kernel_panic_abstr(kernel_t, fp_out):
                 i = 0
                 wp.write("\n")
                 while line and i < 30:
-                    # fp_out.write(line)
                     wp.write(line)
                     i += 1
                     line = fp.readline()
                     if line.find(" end trace ") != -1:
-                        # fp_out.write(line)
                         wp.write(line)
                         wp.write("\n")
                         break
@@ -1091,7 +952,6 @@ def generate_list(slog_base_p):
     watchdog1_regex = re.compile("WATCHDOG KILLING SYSTEM PROCESS")
     watchdog2_regex = re.compile("Subject:")
     watchdog3_regex = re.compile("tid=")
-    watchdog1_module_regex = re.compile("\s*Blocked in monitor\s*(.*) on")
     watchdog_crash1_regex = re.compile(r'waiting')
     watchdog_crash_get_regex = re.compile(r'\((.*?)\)')
     anr_regex = re.compile("happend anr")
@@ -1102,10 +962,8 @@ def generate_list(slog_base_p):
     kernel_emmc_regex = re.compile(r'REGISTER DUMP')
     kernel_dmcmpu_regex = re.compile(r'Warning! DMC MPU detected violated transaction')
 
-    # slog_base_p = sys.argv[1]
     crash_file = None
     log_dir = slog_base_p + os.path.sep + "post_process_report"
-    # warning_file = log_dir + os.path.sep + "warning_file"
     pproblem_list = log_dir + os.path.sep + "problem_list.txt"
     final_report = log_dir + os.path.sep + "final_report.txt"
     pidlist = log_dir + os.path.sep + "anr" + os.path.sep + "anrpidlist.txt"
@@ -1115,7 +973,6 @@ def generate_list(slog_base_p):
         os.remove(final_report)
 
     fp = open(pproblem_list, "w+")
-    # fr = open(final_report,"w+")
     get_serverp(slog_base_p, fp)
 
     for dd in os.listdir(slog_base_p):
@@ -1124,7 +981,6 @@ def generate_list(slog_base_p):
             get_logcheck(slogp, fp)
             get_basic_info(slogp, fp)
             break
-    # kernel_panic = False
     problem_list = walkpath(log_dir)
     num_java = 0
     num_native = 0
@@ -1134,9 +990,7 @@ def generate_list(slog_base_p):
     if kernel_panic:
         fr = open(final_report, "w+")
         kernel_log = log_dir + os.path.sep + "kernel_panic" + os.path.sep + "kernel_log.log"
-        # ff = open(final_report,"w")
         kernel_panic_abstr(kernel_log, fr)
-        # ff.close()
         fr.close()
         fr = open(final_report)
         line = fr.readline()
@@ -1258,7 +1112,6 @@ def generate_list(slog_base_p):
             os.remove(wcnf)
 
     if len(problem_list) < 1:
-        # fp.write("No crash java/native/wt crash issue found.")
         pass
     else:
         for pp in problem_list:
@@ -1312,7 +1165,7 @@ def generate_list(slog_base_p):
                 fd.close()
 
             if pp.find("java_crash_list.txt") != -1:
-                ######find all java crash
+                # find all java crash
                 fr.write("--------------------java crash--------------------------\n")
                 report = os.path.dirname(pp) + os.path.sep + "java_crash_report.txt"
                 problemlist = []
@@ -1329,7 +1182,6 @@ def generate_list(slog_base_p):
                                 tmp = re.findall(pattern, line, re.M)[0].split(",")
                                 javacrashmodule = tmp[2]
                                 javacrashp = tmp[4]
-                                # problemlist[javacrashmodule] = javacrashp
                                 problemlist.append((javacrashmodule, javacrashp))
                             if line.find("file: ") != -1 or line.find("-------------") != -1:
                                 next_f = True
@@ -1344,18 +1196,16 @@ def generate_list(slog_base_p):
                         problemnum[problemlist[k]] += 1
                     else:
                         problemnum[problemlist[k]] = 1
-                # print "Java crash: Total %s." %(num_java)
                 problemlist = list(set(problemlist))
                 pnum = problemnum.copy()
                 for k in problemlist:
                     print k
                 fd.close()
-                # generate_final_report(fr,problemlist,pp)
-                ######write to final_report
+                # write to final_report
                 generate_final_report(fr, problemnum, pp)
-                #####write to problem_list
+                # write to problem_list
                 reportp = open(report)
-                ###java crash list
+                # java crash list
                 while line:
                     next_flag = False
                     length = False
@@ -1413,7 +1263,7 @@ def generate_list(slog_base_p):
 
             if pp.find("native_crash_list.txt") != -1:
                 fr.write("--------------------native crash--------------------------\n")
-                #####fina all native crash
+                # fina all native crash
                 report = os.path.dirname(pp) + os.path.sep + "native_crash_report.txt"
                 problemlist = []
                 problemnum = {}
@@ -1447,7 +1297,7 @@ def generate_list(slog_base_p):
                 for k in problemlist:
                     print k
                 fd.close()
-                ########write to final_report
+                # write to final_report
                 generate_final_report(fr, problemnum, report)
                 reportp = open(report)
                 line = reportp.readline()
@@ -1509,7 +1359,7 @@ def generate_list(slog_base_p):
 
             if pp.find("watchdog_list.txt") != -1:
                 fr.write("-------------------- watchdog timeout--------------------------\n")
-                ######find all wt crash
+                # find all wt crash
                 report = os.path.dirname(pp) + os.path.sep + "watchdog_report.txt"
                 problemlist = []
                 problemnum = {}
@@ -1648,8 +1498,6 @@ def generate_list(slog_base_p):
                                     fp.write("\nWatchdog timeout crash:\n")
                                     wtline = fd.readline()
                                     while wtline:
-
-                                        # if watchdog1_regex.search(wtline) or watchdog2_regex.search(wtline):
                                         if watchdog_crash1_regex.search(wtline):
                                             wtcrash_module = watchdog_crash_get_regex.search(wtline)
                                             if wtcrash_module:
@@ -1857,7 +1705,6 @@ def get_start_end_time_msr(filep):
                     first_time = datetime.datetime(d[0], d[1], d[2], d[3], d[4], d[5])
                     break
             line = fd.readline()
-        # if (first_time - start_time).seconds > 259200:
         if (first_time - start_time).days > 4:
             rtime += end_time - start_time
             start_time = first_time
@@ -2001,10 +1848,9 @@ def run_time(log_p, folderparser):
     log_base_p = os.path.dirname(log_p)
     log_dir = log_base_p + os.path.sep + "post_process_report"
     test_time_file = log_dir + os.path.sep + "test_time_report.txt"
-    # test_time_list = log_dir + os.path.sep + "test_time_list.txt"
     preport = open(test_time_file, "w+")
 
-    #######calculate all ylog runtime#############
+    # calculate all ylog runtime
     ylogpath = log_p + os.path.sep + "external_storage" + os.path.sep + "last_ylog" + os.path.sep + "ylog"
     for i in range(1, 6):
         ylog = ylogpath + str(i) + os.path.sep + "kernel" + os.path.sep + "kernel.log"
@@ -2025,7 +1871,6 @@ def run_time(log_p, folderparser):
         preport.write("current ylog runtime is %s\n\n" % test_time)
 
     sd_file_flag = False
-    # logPath = getKernelLogPaths(folderparser,"runtime")
     logPath = getKernelLogPaths(folderparser, 'runtime')
     if logPath:
         sd_file_flag = True
@@ -2056,7 +1901,6 @@ def run_time(log_p, folderparser):
     if not sd_monkey_flag:
         preport.write("no sd monkey log\n")
 
-
     sd_last_kernel.sort()
     print sd_last_kernel
     print sd_monkey
@@ -2065,12 +1909,11 @@ def run_time(log_p, folderparser):
     problem_list_txt = log_dir + os.path.sep + "problem_list.txt"
     lowpower_path = log_dir + os.path.sep + "low_power"
 
-    # reboot_test = False
-    if not os.path.exists(sd_path + os.path.sep + 'rebootlog.log'):  # reboot_test:
+    if not os.path.exists(sd_path + os.path.sep + 'rebootlog.log'):
         preport.write("there is no \"rebootlog.log\"\n")
-    if not os.path.exists(sd_path + os.path.sep + 'MSR.log'):  # reboot_test:
+    if not os.path.exists(sd_path + os.path.sep + 'MSR.log'):
         preport.write("there is no \"MSR.log\"\n")
-    if os.path.exists(sd_path + os.path.sep + 'rebootlog.log'):  # reboot_test:
+    if os.path.exists(sd_path + os.path.sep + 'rebootlog.log'):
         # 统计sdcard last log kernel log 的时间差
         filep = sd_path + os.path.sep + 'rebootlog.log'
         start_time, end_time = get_start_end_time(filep)
@@ -2084,10 +1927,9 @@ def run_time(log_p, folderparser):
         preport.write(start_time)
         preport.write(end_time)
         print runtime.seconds
-        # formate_str = "How long test time1: [%s]\n"%runtime
         formate_str = "\nReboot Run Time: [%s]\n" % runtime
         preport.write(formate_str)
-    if os.path.exists(sd_path + os.path.sep + 'MSR.log'):  # reboot_test:
+    if os.path.exists(sd_path + os.path.sep + 'MSR.log'):
         # 统计sdcard last log kernel log 的时间差
         filep = sd_path + os.path.sep + 'MSR.log'
         runtime = get_start_end_time_msr(filep)
@@ -2209,7 +2051,6 @@ def run_time(log_p, folderparser):
             preport.write(formate_str)
 
 
-################################################################################################
 ###############parse_kernel,anr,java.native,wt###################
 
 def run_kernel_panic(devbit):
@@ -2252,7 +2093,6 @@ def run_kmemleak():
     parse_kmemleak(ylog_p, serial_num)
 
 
-####################################################################
 ##############parse_java_crash################################
 def getReportDir_java(folderParser):
     if platform.system() == "Linux":
@@ -2263,7 +2103,6 @@ def getReportDir_java(folderParser):
     reportDir = slogBasePath + os.path.sep + "post_process_report" + os.path.sep + "java_crash"
     if not os.path.exists(reportDir):
         os.makedirs(reportDir)
-    reportdir_g = reportDir
     return reportDir
 
 
@@ -2306,8 +2145,6 @@ def getCrashEvent(efile, pfile, rf, fpp):
     java_crash_line_regex = re.compile(java_crash_line_pattern)
     basedir = os.path.dirname(efile)
     print basedir
-    ####get crash log
-    sysfiles = None
     sysfiles = getSystemLogPaths(fpp, "javacrash")
     print sysfiles
     if sysfiles:
@@ -2317,18 +2154,14 @@ def getCrashEvent(efile, pfile, rf, fpp):
     if os.path.exists(efile):
         fd = open(efile)
     else:
-        # print "Open event file error,return"
         print "No event file for javacrash"
         return 0
     pfile.write("file: " + efile + "\n")
-    # rf.write("------------------------------------------------------------\n")
-    # rf.write("file: " + efile + "\n")
     line = fd.readline()
     while line:
-        ######find am_crash from event file
+        # find am_crash from event file
         if line.find("am_crash") != -1 and line.find("java") != -1:
             pfile.write(line)
-            # rf.write(line)
             line = line.strip().split(" ")
             crashtime = line[0] + " " + line[1].split(".")[0]
             print crashtime
@@ -2342,7 +2175,7 @@ def getCrashEvent(efile, pfile, rf, fpp):
                     fs = open(ffs)
                     ll = fs.readline()
                     while ll:
-                        ######find according system info(timer and FATAL EXCEPTION)
+                        # find according system info(timer and FATAL EXCEPTION)
                         if ll.find(crashtime) != -1 and java_crash_regex.search(ll):
                             # if java_crash_regex.search(ll):
                             rf.write("----------------------------------------\n")
@@ -2379,18 +2212,18 @@ def parseNext(fd):
     line = fd.readline()
     while line:
         if not crash_begin:
-            ## match "AndroidRuntime: FATAL EXCEPTION"
+            # match "AndroidRuntime: FATAL EXCEPTION"
             if java_crash_regex.search(line):
                 line = line.strip()
                 lines.append(line)
                 crash_begin = True
         else:
-            ## match "AndroidRuntime:
+            # match "AndroidRuntime:
             if java_crash_line_regex.search(line):
                 line = line.strip()
                 lines.append(line)
             else:
-                ## java crash finished
+                # java crash finished
                 break
         line = fd.readline()
 
@@ -2448,25 +2281,15 @@ def getSystemCrashFileinfo(crash_file, pf, pl):
     pf.write("file: " + crash_file + "\n")
     pl.write("file: " + crash_file + "\n")
     line = dfp.readline()
-    # lline = []
     t_flag = False
     while line:
         if java_crash_regex.search(line):
             t_flag = True
-            # get java_crash timer for memory analyse
-            # ll = line.split(" ")
-            # java_timer_for_mm = ll[0] + " " + ll[1]
-            # print "java_timer_for_mm:**********************************************"
             pl.write(line)
             pf.write(line)
             for i in range(10):
-                # lline.append(line)
-                # tfp_p.write(line)
-                # line = dfp.readline()
                 line = dfp.readline()
                 pf.write(line)
-        # break
-        # break
         line = dfp.readline()
     # if there is no "FATAL EXCEPTION IN SYSTEM PROCESS:" info,then copy all system_server_crash@ content to tmp_report
     if not t_flag:
@@ -2489,7 +2312,6 @@ def compare_slog_dropbox_java(report_p, list_p, tmpr_p, tmpl_p):
     tmplp = open(tmpl_p)
 
     line1 = listp.readlines()
-    line2 = reportp.readlines()
     listp.close()
     reportp.close()
 
@@ -2514,7 +2336,6 @@ def compare_slog_dropbox_java(report_p, list_p, tmpr_p, tmpl_p):
                 pass
             else:
                 listp = open(list_p, "a+")
-                #	listp.write("-------------------------------------\n")
                 listp.write(file_line)
                 listp.write(line)
                 listp.close()
@@ -2560,8 +2381,6 @@ def getProblemList(folderParser):
 
 
 def parse_java_crash(input_dir, devnum):
-    # script_file = sys.argv[0]
-    # global java_time_for_mm
     tmpfile = os.path.abspath('.') + os.path.sep + "logs" + os.path.sep + "javacrash_file_tmp.txt"
     tmplist = os.path.abspath('.') + os.path.sep + "logs" + os.path.sep + "javacrash_list_tmp.txt"
     eventlogs = None
@@ -2592,17 +2411,14 @@ def parse_java_crash(input_dir, devnum):
             rfile = open(reportFile, "w+")
             for eventfile in eventlogs:
                 getCrashEvent(eventfile, plist, rfile, fp)
-                # systemLogPaths.sort()
-            ##get system log content
             plist.close()
             rfile.close()
         elif systemLogPaths:
             for systemLog in systemLogPaths:
                 parse(systemLog, reportFile)
         else:
-            ## no system log to parse java crash
+            # no system log to parse java crash
             print 'No system and event log file to parse.'
-            # rfile.wtite("\nNo system and event log file to parse")
         if dropboxlogs:
             tmpfile_p = open(tmpfile, "w")
             tmplist_p = open(tmplist, "w")
@@ -2613,12 +2429,8 @@ def parse_java_crash(input_dir, devnum):
             tmplist_p.close()
             if os.path.exists(tmplist):
                 compare_slog_dropbox_java(reportFile, problemlist, tmpfile, tmplist)
-                # java_timer_for_mm = java_timer_for_mm.replace(" ","_")
-                # os.system("python parse_mm.py " + "--log-dir " + input_dir + " --serial-num " + devnum + " --timer " + "last_time")
     else:
-        ## no input file, just return
         usage()
-        # sys.exit(1)
         return 0
     if os.path.exists(tmpfile):
         os.remove(tmpfile)
@@ -2626,7 +2438,6 @@ def parse_java_crash(input_dir, devnum):
         os.remove(tmplist)
 
 
-################################################################################################
 ############parse_native_crash##############################
 def compare_slog_dropbox_native(report_p, list_p, tmpr_p, tmpl_p):
     native_crash_module_get_regex = re.compile(r'\s*name: (\w+)')
@@ -2636,7 +2447,6 @@ def compare_slog_dropbox_native(report_p, list_p, tmpr_p, tmpl_p):
     tmplp = open(tmpl_p)
 
     line1 = listp.readlines()
-    line2 = reportp.readlines()
     listp.close()
     reportp.close()
 
@@ -2707,10 +2517,9 @@ def get_tombstonefile_info(tombstonef, np, ft):
     np.write("file: " + tombstonef + "\n")
     ft.write("file: " + tombstonef + "\n")
     line = tsp.readline()
-    #########write to tmp_log and native_crash_file.txt
+    # write to tmp_log and native_crash_file.txt
     while line:
         if native_crash_regex.search(line):
-            # r_line = line
             flag = True
             ft.write(line)
             np.write(line)
@@ -2723,8 +2532,7 @@ def get_tombstonefile_info(tombstonef, np, ft):
                     line = tsp.readline()
             break
         line = tsp.readline()
-        # np.write(line)
-    #########write more info to native_crash_file.txt
+    # write more info to native_crash_file.txt
     while line:
         if end_line.search(line):
             # np.close()
@@ -2776,7 +2584,6 @@ def check_corefile(folderparser, native_p, corelist, parsetype):
             except:
                 pass
             cc = cc_new
-        # print "native core file " + str(cc)
         result = os.popen("python readelf.py -l " + cc)
         line = ""
         for p in result:
@@ -2840,24 +2647,6 @@ def get_nativecrash_info(tombsf, pl, pr):
                     next_native = True
                 pr.write(line)
                 line = fd.readline()
-            '''  
-            if ft and native_f:
-                #ft.seek(0)
-                tline = ft.readline()
-                while tline:
-                    new_f = False
-                    if tline.find(native_f) != -1:
-                        pl.write("file: " + traces_file + "\n")
-                        while tline:
-                            pr.write(tline)
-                            if D_LINE_new.search(tline):
-                                new_f = True
-                                break
-                            tline = ft.readline()
-                    if new_f:
-                        break
-                    tline = ft.readline()      
-            '''
         if nativec:
             break
         line = fd.readline()
@@ -2915,39 +2704,11 @@ def parse_native_crash(logdir, devnum):
                 crash_list = get_nativecrash_info(tracefile, plist, preport)
                 if crash_list != 0:
                     core_list.append(crash_list[0])
-                    ###there,,,ft_p will be written temporarily, just fit function of get_tombstonefile_info
-                    ###if there is snapshot file, it will be written by snapshot content
-                    # native_crash_line = get_tombstonefile_info(main_log,np_p,ft_p)
+                    # there,,,ft_p will be written temporarily, just fit function of get_tombstonefile_info
+                    # if there is snapshot file, it will be written by snapshot content
         preport.close()
         plist.close()
 
-        ''' 
-        plist = open(native_crash_list)
-        line = plist.readline()
-        time_list = []
-        core_list = []
-        while line:
-            c_flag = False
-            if line.find("file: ") != -1:
-                line = plist.readline()
-                while line:
-                    if native_crash_regex.search(line):
-                        core_list.append(native_crash_module_get_regex.search(line).group(1))
-                        tmp_line = line.strip().split(" ")
-                        tmp_time = tmp_line[0] + "-" + tmp_line[1].split(".")[0]
-                        time_list.append(tmp_time.replace(":","-"))
-                    if line.find("file: ") != -1:
-                        c_flag = True
-                        break
-                    line = plist.readline()
-            if c_flag:
-                continue
-            line = plist.readline()
-        '''
-        '''
-        if len(time_list) > 0:
-        dd = get_snapshot_file(fp,time_list,nativepath,"nativecrashsnap")
-        '''
         if len(core_list) > 0:
             core_list = set(list(core_list))
             check_corefile(fp, nativepath, core_list, "nativecrashcore")
@@ -2971,18 +2732,12 @@ def parse_native_crash(logdir, devnum):
         if dropcore != 0:
             check_corefile(fp, nativepath, dropcore, "nativecrashcore")
 
-        # native_timer_for_mm = native_timer_for_mm.replace(" ","_")
-        # print native_timer_for_mm
-        # os.system("python parse_mm.py " + "--log-dir " + logdir + " --serial-num " + devnum + " --timer " + "last_time")
-
-
         if os.path.exists(tmpfile):
             os.remove(tmpfile)
         if os.path.exists(tmplist):
             os.remove(tmplist)
 
 
-##################################################################################################
 ############parse_watchdog_crash#######################
 
 def get_snapshot_file_info(sfiles, watchdog_file, listfile):
@@ -2992,7 +2747,6 @@ def get_snapshot_file_info(sfiles, watchdog_file, listfile):
     lfp = open(listfile, 'a+')
     tid_list = []
     for snap_f in sfiles:
-        # print "ss" + snap_f
         try:
             dfp = open(snap_f)
         except:
@@ -3000,14 +2754,12 @@ def get_snapshot_file_info(sfiles, watchdog_file, listfile):
             tfp.close()
             lfp.close()
             return 0
-            # tmp_p = dfp.tell()
         line = dfp.readline()
         tid = None
         main_t = False
         while line:
             if line.find(" tid=1 ") != -1 and line.find("Blocked") != -1:
                 pp = tmp_p
-                # line_tid = line
                 line = dfp.readline()
                 while line:
                     if thread_id_regex.search(line):
@@ -3064,7 +2816,6 @@ def compare_slog_dropbox_wt(report_p, list_p, tmpr_p, tmpl_p):
     tmplp = open(tmpl_p)
 
     line1 = listp.readlines()
-    line2 = reportp.readlines()
     listp.close()
     reportp.close()
 
@@ -3304,7 +3055,7 @@ def parse_watchdog_crash(slog_path, devnum):
         watchdog_list = reportDir + os.path.sep + "watchdog_list.txt"
         preport = open(reportFile, "w+")
         plist = open(watchdog_list, "w+")
-        ####parse info from dropbox/file
+        # parse info from dropbox/file
         systemfiles = None
         systemfiles = fp.getFilesBy("watchdogcrash")
         systemfiles = systemfiles.split(",")
@@ -3336,10 +3087,6 @@ def parse_watchdog_crash(slog_path, devnum):
             if c_flag:
                 continue
             line = plist.readline()
-        '''
-        if len(time_list) > 0:
-            get_snapshot_file_wt(fp,time_list,reportDir,"watchdogsnap")
-        '''
         plist.close()
 
         dropboxlogs = get_watchdog_crash_file(fp)
@@ -3373,8 +3120,7 @@ def parse_watchdog_crash(slog_path, devnum):
         get_snapshot_file_info(snapfiles, reportFile, watchdog_list)
 
 
-#####################################################################################################
-################parse_lowpower###############
+###############parse_lowpower###############
 
 
 def get_files(filep, TYPE):
@@ -3652,7 +3398,6 @@ def parse_lowpower(input_dir, devnum):
                         if os.path.dirname(os.path.dirname(sd_last_android_main_file)) == base_dir:
                             ret = find_tempreture_key_word(sd_last_android_main_file, preport, plist)
                             if not ret:
-                                # preport.write("*****No result 3")
                                 initv = ""
                                 last_tempre = [initv for i in range(11)]
                                 preport.write("file: " + sd_kernel_log_file + "\n")
@@ -3667,10 +3412,9 @@ def parse_lowpower(input_dir, devnum):
                                         preport.write("cap :" + last_tempre[i] + "\n")
                                     else:
                                         preport.write(last_tempre[i])
-                                        # print (last_tempre[i])
                                 if not ret:
                                     freezescreen = True
-        else:  # sd_last_kernel
+        else:
             print("********* There is not main log1\n")
             preport.write("\nNo kernel log file in the (externel_storage/last_log/kernel/)\n")
             if android_main_file_exist_flag == True:
@@ -3685,9 +3429,6 @@ def parse_lowpower(input_dir, devnum):
             print kernel_log
             find_freezescreen(kernel_log, preport, plist)
 
-        # except:
-        #		print "************There is abnormal phenomenon!!!!!!***********\n"
-        #		pass
         preport.close()
         plist.close()
 
@@ -3716,7 +3457,6 @@ def read_kmemleak_to_list(destFile):
     func_addr_list = []
 
     while line:
-        # print line
         if line.find("kmemleak_alloc") != -1 or line.find("kmem_cache_alloc_trace") != -1:
             line = fd.readline()
             func_addr = kmemleak_func_addr_regex.search(line).group()[2:-2]
@@ -3734,7 +3474,7 @@ def parse_kmemleak(input_dir, devnum):
         location = input_dir.rfind("\\")
     slogBasePath = input_dir[0:location]
 
-    if input_dir == None:
+    if input_dir is None:
         print "log directory is needed!"
         return 0
     else:
@@ -3801,7 +3541,6 @@ def getReportDir_anr(folderParser):
     reportDir = slogBasePath + os.path.sep + "post_process_report" + os.path.sep + "anr"
     if not os.path.exists(reportDir):
         os.makedirs(reportDir)
-    reportdir_g = reportDir
     return reportDir
 
 
@@ -3831,7 +3570,6 @@ def parse_anr(input_dir, devnum):
         if traces_file[0] == '':
             pidl.close()
             return 0
-        # traces_tmp = {}
         dirnames = []
         for tf in traces_file:
             dirnames.append(os.path.dirname(tf))
@@ -3845,9 +3583,6 @@ def parse_anr(input_dir, devnum):
             for tf in traces_file:
                 if tf.find(dirn) != -1:
                     tfiles.append(tf)
-
-                    # traces_tmp[dirn] = tfiles
-                    # for keys in traces_tmp:
             traces = {}
             for tf in tfiles:
                 print tf
@@ -3860,7 +3595,6 @@ def parse_anr(input_dir, devnum):
             for keys in traces:
                 tracesf.append(traces[keys])
             print tracesf
-            # tracesf.reverse()
             for tf in tracesf:
                 print tf
                 try:
@@ -3918,8 +3652,6 @@ def parse_anr(input_dir, devnum):
                 tfp.close()
 
 
-################################################################################################
-
 def sysdump_check(sysdump_info):
     global sysdump_p
     flag = False
@@ -3957,7 +3689,6 @@ def download_symbols(logdir, dev_mode, symbols_dir):
 
     print url
     time.sleep(10)
-    # dst_file = symbols_dir + os.path.sep + symbolname
     dst_file = symbols_dir + os.path.sep + "symbols.vmlinux." + dev_info + "_" + build_type + "_" + "native.tgz"
     print dst_file
     dst_path = symbols_dir
@@ -3965,9 +3696,6 @@ def download_symbols(logdir, dev_mode, symbols_dir):
     print "extracting with tarfile"
     tar = tarfile.open(dst_file)
     tar.extractall(dst_path)
-    # else:
-    #    print "No device mode related file"
-    #   sys.exit(1)
 
 
 def get_device_mode():
@@ -4023,7 +3751,6 @@ def get_build_host():
                 break
             line = fd.readline()
     if build_host:
-        # print build_host
         return build_host
     # build_host: http://10.0.1.56:8080/jenkins/job/sprdroid5.1_trunk_SharkLT8/68/
     else:
@@ -4052,7 +3779,6 @@ def get_build_type():
                 break
             line = fd.readline()
     if build_type:
-        # print build_host
         return build_type
     # build_host: http://10.0.1.56:8080/jenkins/job/sprdroid5.1_trunk_SharkLT8/68/
     else:
@@ -4133,7 +3859,6 @@ def parse_kernel_BUG(slogp, folderparser):
         while line:
             next_e = False
             if kernel_BUG_regex.search(line):
-                # if line.find("BUG:") != -1:
                 bf.write("file: %s\n" % kf)
                 num += 1
                 bf.write(line)
@@ -4144,7 +3869,6 @@ def parse_kernel_BUG(slogp, folderparser):
                         next_e = True
                         break
                     if kernel_BUG_regex.search(line):
-                        # if line.find("BUG:") != -1:
                         next_e = True
                         break
                     bf.write(line)
@@ -4350,15 +4074,7 @@ def parse_assert(slogp):
 
         except:
             continue
-    '''
-    line = aprp.readline()
-    while line:
-        if line.find(" Modem ") != -1:
-            p1.write(line)
-        if line.find(" Wcn ") != -1: 
-            p2.write(line)
-        line = aprp.readline()
-    '''
+
     p1.close()
     p2.close()
 
